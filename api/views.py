@@ -3,16 +3,27 @@ import json
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, BasePermission, SAFE_METHODS
 from api.models import *
 from api.serializers import *
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 
-permission_classes = (IsAdminUser, IsAuthenticated)
+
+class IsAdminOrReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        return bool(
+            request.method in SAFE_METHODS or
+            (request.user and request.user.is_staff)
+        )
+
+
+permission_classes = (IsAdminUser, IsAuthenticated, IsAdminOrReadOnly)
 
 
 class BookViewSet(viewsets.ViewSet):
+    permission_classes = (IsAdminUser, IsAuthenticated, IsAdminOrReadOnly)
+
     def list(self, request):
         queryset = Book.objects.all()
         serializer = BookSerializer(queryset, many=True)
@@ -30,6 +41,8 @@ class BookViewSet(viewsets.ViewSet):
 
 
 class JournalViewSet(viewsets.ViewSet):
+    permission_classes = (IsAdminUser, IsAuthenticated, IsAdminOrReadOnly)
+
     def list(self, request):
         queryset = Journal.objects.all()
         serializer = JournalSerializer(queryset, many=True)
@@ -47,6 +60,8 @@ class JournalViewSet(viewsets.ViewSet):
 
 
 class BookListAPIView(APIView):
+    permission_classes = (IsAdminUser, IsAuthenticated, IsAdminOrReadOnly)
+
     def get(self, request):
         books = Book.objects.all()
         ser = BookSerializer(books, many=True)
@@ -65,6 +80,8 @@ class BookListAPIView(APIView):
 
 
 class BookDetailsAPIView(APIView):
+    permission_classes = (IsAdminUser, IsAuthenticated, IsAdminOrReadOnly)
+
     def get_object(self, pk):
         try:
             return Book.objects.get(pk=pk)
@@ -98,6 +115,8 @@ class BookDetailsAPIView(APIView):
 
 
 class JournalListAPIView(APIView):
+    permission_classes = (IsAdminUser, IsAuthenticated, IsAdminOrReadOnly)
+
     def get(self, request):
         journals = Journal.objects.all()
         ser = JournalSerializer(journals, many=True)
@@ -116,6 +135,8 @@ class JournalListAPIView(APIView):
 
 
 class JournalDetailsAPIView(APIView):
+    permission_classes = (IsAdminUser, IsAuthenticated, IsAdminOrReadOnly)
+
     def get_object(self, pk):
         try:
             return Journal.objects.get(pk=pk)
@@ -149,6 +170,8 @@ class JournalDetailsAPIView(APIView):
 
 
 class CreateUserAPIView(APIView):
+    permission_classes = (IsAdminUser, IsAuthenticated, IsAdminOrReadOnly)
+
     def post(self, request):
         print(request.data)
         data = request.data
